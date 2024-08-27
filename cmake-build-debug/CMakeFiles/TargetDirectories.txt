@@ -1,0 +1,3 @@
+/Users/gefenrashty/CLionProjects/computer communication/TCP_server/cmake-build-debug/CMakeFiles/TCP_server.dir
+/Users/gefenrashty/CLionProjects/computer communication/TCP_server/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/gefenrashty/CLionProjects/computer communication/TCP_server/cmake-build-debug/CMakeFiles/rebuild_cache.dir
