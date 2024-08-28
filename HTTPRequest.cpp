@@ -1,6 +1,6 @@
-#include "RequestsManager.h"
+#include "HTTPRequest.h"
 
-void RequestManger::extract(char* recvBuffer) {
+void HTTPRequest::extract(char* recvBuffer) {
     istringstream requestStream(recvBuffer);
     string line, param1, param2;
 

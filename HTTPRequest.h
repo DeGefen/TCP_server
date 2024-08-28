@@ -1,7 +1,8 @@
 #pragma once
 #include "config.h"
 
-class RequestManger {
+class HTTPRequest {
+public:
     string method;
     string url;
     string httpVersion;
