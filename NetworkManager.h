@@ -1,10 +1,15 @@
 #pragma once
-#include "config.h"
+#include "Config.h"
 
 class NetworkManager {
-    static bool addSocket(SOCKET id, int what);
-    static void removeSocket(int index);
-    static void acceptConnection(int index);
-    static void receiveMessage(int index);
-    static void sendMessage(int index);
+    bool addSocket(SOCKET id, int what);
+    void removeSocket(int index);
+    void acceptConnection(int index);
+    void receiveMessage(int index);
+    void prossesRequest(int index);
+    void sendMessage(int index);
+
+private:
+    static struct SocketState sockets[MAX_SOCKETS]={0};
+    int socketsCount = 0;
 };
