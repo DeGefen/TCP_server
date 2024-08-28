@@ -1,12 +1,16 @@
 #include "HTTPRequest.h"
 
-void HTTPRequest::extract(char* recvBuffer) {
-    istringstream requestStream(recvBuffer);
+void HTTPRequest::extract(const char* buffer) {
+    // clear map objects
+    queryParams.clear();
+    headers.clear();
+
+    istringstream requestStream(buffer);
     string line, param1, param2;
 
     getline(requestStream, line);
     istringstream lineStream(line);
-    lineStream >> method >> param1 >> httpVersion;
+    lineStream >> method >> param1 >> protocol;
     istringstream urlStream(param1);
     getline(urlStream, url, '?');
     while (getline(urlStream, param1, '='))

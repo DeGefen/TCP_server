@@ -4,25 +4,25 @@ void NetworkManager::initializeServer()
 {
     if (NO_ERROR != WSAStartup(MAKEWORD(2,2), &wsaData))
     {
-        cout<<"Time Server: Error at WSAStartup()\n";
+        cout<<"Server: Error at WSAStartup()\n";
         return;
     }
 
     listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (INVALID_SOCKET == listenSocket)
     {
-        cout<<"Time Server: Error at socket(): "<<WSAGetLastError()<<endl;
+        cout<<"Server: Error at socket(): "<<WSAGetLastError()<<endl;
         WSACleanup();
         return;
     }
 
     serverService.sin_family = AF_INET;
     serverService.sin_addr.s_addr = INADDR_ANY;
-    serverService.sin_port = htons(TIME_PORT);
+    serverService.sin_port = htons(PORT);
 
     if (SOCKET_ERROR == bind(listenSocket, (SOCKADDR *) &serverService, sizeof(serverService)))
     {
-        cout<<"Time Server: Error at bind(): "<<WSAGetLastError()<<endl;
+        cout<<"Server: Error at bind(): "<<WSAGetLastError()<<endl;
         closesocket(listenSocket);
         WSACleanup();
         return;
@@ -30,7 +30,7 @@ void NetworkManager::initializeServer()
 
     if (SOCKET_ERROR == listen(listenSocket, 5))
     {
-        cout << "Time Server: Error at listen(): " << WSAGetLastError() << endl;
+        cout << "Server: Error at listen(): " << WSAGetLastError() << endl;
         closesocket(listenSocket);
         WSACleanup();
         return;
@@ -61,7 +61,7 @@ void NetworkManager::runServer()
         nfd = select(0, &waitRecv, &waitSend, NULL, NULL);
         if (nfd == SOCKET_ERROR)
         {
-            cout <<"Time Server: Error at select(): " << WSAGetLastError() << endl;
+            cout <<"Server: Error at select(): " << WSAGetLastError() << endl;
             WSACleanup();
             return;
         }
@@ -99,7 +99,7 @@ void NetworkManager::runServer()
         }
     }
 
-    cout << "Time Server: Closing Connection.\n";
+    cout << "Server: Closing Connection.\n";
     closesocket(listenSocket);
     WSACleanup();
 }
@@ -118,6 +118,13 @@ bool NetworkManager::addSocket(SOCKET id, int what)
             return (true);
         }
     }
+
+    unsigned long flag=1;
+    if (ioctlsocket(id, FIONBIO, &flag) != 0)
+    {
+        cout<<"Server: Error at ioctlsocket(): "<<WSAGetLastError()<<endl;
+    }
+
     return (false);
 }
 
@@ -137,19 +144,11 @@ void NetworkManager::acceptConnection(int index)
     SOCKET msgSocket = accept(id, (struct sockaddr *)&from, &fromLen);
     if (INVALID_SOCKET == msgSocket)
     {
-        cout << "Time Server: Error at accept(): " << WSAGetLastError() << endl;
+        cout << "Server: Error at accept(): " << WSAGetLastError() << endl;
         return;
     }
-    cout << "Time Server: Client "<<inet_ntoa(from.sin_addr)<<":"<<ntohs(from.sin_port)<<" is connected." << endl;
+    cout << "Server: Client "<<inet_ntoa(from.sin_addr)<<":"<<ntohs(from.sin_port)<<" is connected." << endl;
 
-    //
-    // Set the socket to be in non-blocking mode.
-    //
-    unsigned long flag=1;
-    if (ioctlsocket(msgSocket, FIONBIO, &flag) != 0)
-    {
-        cout<<"Time Server: Error at ioctlsocket(): "<<WSAGetLastError()<<endl;
-    }
 
     if (addSocket(msgSocket, RECEIVE) == false)
     {
@@ -168,7 +167,7 @@ void NetworkManager::receiveMessage(int index)
 
     if (SOCKET_ERROR == bytesRecv)
     {
-        cout << "Time Server: Error at recv(): " << WSAGetLastError() << endl;
+        cout << "Server: Error at recv(): " << WSAGetLastError() << endl;
         closesocket(msgSocket);
         removeSocket(index);
         return;
@@ -182,37 +181,22 @@ void NetworkManager::receiveMessage(int index)
     else
     {
         sockets[index].buffer[len + bytesRecv] = '\0'; //add the null-terminating to make it a string
-        cout<<"Time Server: Recieved: "<<bytesRecv<<" bytes of \""<<&sockets[index].buffer[len]<<"\" message.\n";
+        cout<<"Server: Recieved: "<<bytesRecv<<" bytes of \""<<&sockets[index].buffer[len]<<"\" message.\n";
 
-        sockets[index].len += bytesRecv;
-
-        if (sockets[index].len > 0)
-        {
-            if (strncmp(sockets[index].buffer, "TimeString", 10) == 0)
-            {
-                sockets[index].send  = SEND;
-                sockets[index].sendSubType = SEND_TIME;
-                memcpy(sockets[index].buffer, &sockets[index].buffer[10], sockets[index].len - 10);
-                sockets[index].len -= 10;
-                return;
-            }
-            else if (strncmp(sockets[index].buffer, "SecondsSince1970", 16) == 0)
-            {
-                sockets[index].send  = SEND;
-                sockets[index].sendSubType = SEND_SECONDS;
-                memcpy(sockets[index].buffer, &sockets[index].buffer[16], sockets[index].len - 16);
-                sockets[index].len -= 16;
-                return;
-            }
-            else if (strncmp(sockets[index].buffer, "Exit", 4) == 0)
-            {
-                closesocket(msgSocket);
-                removeSocket(index);
-                return;
-            }
-        }
+        sockets[index].len += bytesRecv + 1;    // "+ 1" to separate each request by '\0'
+        loadMesseage(index);
     }
+}
 
+void NetworkManager::loadMesseage (int index) {
+    if (sockets[index].len > 0)
+    {
+        sockets[index].send  = RESPONES;
+        sockets[index].request.extract(sockets[index].buffer);
+        int requestSize = strlen(sockets[index].buffer) + 1;
+        memcpy(sockets[index].buffer, sockets[index].buffer + requestSize, sockets[index].len - requestSize);
+    }
+    else sockets[index].send  = IDLE;
 }
 
 void NetworkManager::prepareResponse(int index)
@@ -226,36 +210,15 @@ void NetworkManager::sendMessage(int index)
     char sendBuff[255];
 
     SOCKET msgSocket = sockets[index].id;
-    if (sockets[index].sendSubType == SEND_TIME)
-    {
-        // Answer client's request by the current time string.
-
-        // Get the current time.
-        time_t timer;
-        time(&timer);
-        // Parse the current time to printable string.
-        strcpy(sendBuff, ctime(&timer));
-        sendBuff[strlen(sendBuff)-1] = 0; //to remove the new-line from the created string
-    }
-    else if(sockets[index].sendSubType == SEND_SECONDS)
-    {
-        // Answer client's request by the current time in seconds.
-
-        // Get the current time.
-        time_t timer;
-        time(&timer);
-        // Convert the number to string.
-        itoa((int)timer, sendBuff, 10);
-    }
 
     bytesSent = send(msgSocket, sendBuff, (int)strlen(sendBuff), 0);
     if (SOCKET_ERROR == bytesSent)
     {
-        cout << "Time Server: Error at send(): " << WSAGetLastError() << endl;
+        cout << "Server: Error at send(): " << WSAGetLastError() << endl;
         return;
     }
 
-    cout<<"Time Server: Sent: "<<bytesSent<<"\\"<<strlen(sendBuff)<<" bytes of \""<<sendBuff<<"\" message.\n";
+    cout<<"Server: Sent: "<<bytesSent<<"\\"<<strlen(sendBuff)<<" bytes of \""<<sendBuff<<"\" message.\n";
 
-    sockets[index].send = IDLE;
+    loadMesseage(index);
 }

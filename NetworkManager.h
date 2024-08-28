@@ -14,12 +14,10 @@ private:
         int	recv;			// Receiving?
         int	send;			// Sending?
         HTTPRequest request;	// Sending sub-type
-        char buffer[128];
+        char buffer[BUFFER_SIZE];
         int len;
     };
 
-    static constexpr int TIME_PORT = 27015;
-    static constexpr int MAX_SOCKETS = 60;
     static constexpr int EMPTY = 0;
     static constexpr int LISTEN  = 1;
     static constexpr int RECEIVE = 2;
@@ -35,6 +33,7 @@ private:
     void removeSocket(int index);
     void acceptConnection(int index);
     void receiveMessage(int index);
+    void loadMesseage(int index);
     void prepareResponse(int index);
     void sendMessage(int index);
 

@@ -2,14 +2,14 @@
 #include "config.h"
 
 class HTTPRequest {
-public:
     string method;
     string url;
-    string httpVersion;
+    string protocol;
     map<string, string> queryParams;
     map<string, string> headers;
     string body;
 
-    void extract(char* recvBuffer);
+public:
+    void extract(const char* buffer);
 };
 
