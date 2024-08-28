@@ -8,6 +8,12 @@ using namespace std;
 #include <string.h>
 #include <time.h>
 
+#include <string>
+#include <vector>
+#include <map>
+#include <vector>
+#include <sstream>
+
 struct SocketState
 {
     SOCKET id;			// Socket handle
