@@ -1,6 +1,6 @@
 #pragma once
 #include "Config.h"
-#include "HTTPRequest.h"
+#include "HTTP_Request.h"
 
 class NetworkManager {
 public:
@@ -13,7 +13,7 @@ private:
         SOCKET id;			// Socket handle
         int	recv;			// Receiving?
         int	send;			// Sending?
-        HTTPRequest request;	// Sending sub-type
+        HTTP_Request request;	// Sending sub-type
         char buffer[BUFFER_SIZE];
         int len;
     };

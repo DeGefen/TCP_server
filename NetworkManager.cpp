@@ -192,7 +192,7 @@ void NetworkManager::loadMesseage (int index) {
     if (sockets[index].len > 0)
     {
         sockets[index].send  = RESPONES;
-        sockets[index].request.extract(sockets[index].buffer);
+        sockets[index].request.insert(sockets[index].buffer);
         int requestSize = strlen(sockets[index].buffer) + 1;
         memcpy(sockets[index].buffer, sockets[index].buffer + requestSize, sockets[index].len - requestSize);
     }
