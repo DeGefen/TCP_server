@@ -49,8 +49,8 @@ cmake_ninja_workdir = /Users/gefenrashty/CLionProjects/computer$ communication/T
 
 build cmake_object_order_depends_target_TCP_server: phony || .
 
-build CMakeFiles/TCP_server.dir/HTTPRequest.cpp.o: CXX_COMPILER__TCP_server_unscanned_Debug /Users/gefenrashty/CLionProjects/computer$ communication/TCP_server/HTTPRequest.cpp || cmake_object_order_depends_target_TCP_server
-  DEP_FILE = CMakeFiles/TCP_server.dir/HTTPRequest.cpp.o.d
+build CMakeFiles/TCP_server.dir/HTTP_Request.cpp.o: CXX_COMPILER__TCP_server_unscanned_Debug /Users/gefenrashty/CLionProjects/computer$ communication/TCP_server/HTTP_Request.cpp || cmake_object_order_depends_target_TCP_server
+  DEP_FILE = CMakeFiles/TCP_server.dir/HTTP_Request.cpp.o.d
   FLAGS = -g -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -fcolor-diagnostics
   OBJECT_DIR = CMakeFiles/TCP_server.dir
   OBJECT_FILE_DIR = CMakeFiles/TCP_server.dir
@@ -73,6 +73,12 @@ build CMakeFiles/TCP_server.dir/HTTP_Response.cpp.o: CXX_COMPILER__TCP_server_un
   OBJECT_DIR = CMakeFiles/TCP_server.dir
   OBJECT_FILE_DIR = CMakeFiles/TCP_server.dir
 
+build CMakeFiles/TCP_server.dir/FileManager.cpp.o: CXX_COMPILER__TCP_server_unscanned_Debug /Users/gefenrashty/CLionProjects/computer$ communication/TCP_server/FileManager.cpp || cmake_object_order_depends_target_TCP_server
+  DEP_FILE = CMakeFiles/TCP_server.dir/FileManager.cpp.o.d
+  FLAGS = -g -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/TCP_server.dir
+  OBJECT_FILE_DIR = CMakeFiles/TCP_server.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target TCP_server
@@ -81,7 +87,7 @@ build CMakeFiles/TCP_server.dir/HTTP_Response.cpp.o: CXX_COMPILER__TCP_server_un
 #############################################
 # Link the static library libTCP_server.a
 
-build libTCP_server.a: CXX_STATIC_LIBRARY_LINKER__TCP_server_Debug CMakeFiles/TCP_server.dir/HTTPRequest.cpp.o CMakeFiles/TCP_server.dir/Server.cpp.o CMakeFiles/TCP_server.dir/NetworkManager.cpp.o CMakeFiles/TCP_server.dir/HTTP_Response.cpp.o
+build libTCP_server.a: CXX_STATIC_LIBRARY_LINKER__TCP_server_Debug CMakeFiles/TCP_server.dir/HTTP_Request.cpp.o CMakeFiles/TCP_server.dir/Server.cpp.o CMakeFiles/TCP_server.dir/NetworkManager.cpp.o CMakeFiles/TCP_server.dir/HTTP_Response.cpp.o CMakeFiles/TCP_server.dir/FileManager.cpp.o
   ARCH_FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles/TCP_server.dir

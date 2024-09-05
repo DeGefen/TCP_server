@@ -8,11 +8,15 @@ using namespace std;
 #include <string.h>
 #include <time.h>
 
+#include <boost/filesystem.hpp>
 #include <string>
 #include <vector>
 #include <map>
 #include <vector>
 #include <sstream>
+#include <fstream>
+#include <exception>
+#include <filesystem>
 
 const int PORT = 27015;
 const int MAX_SOCKETS = 60;
