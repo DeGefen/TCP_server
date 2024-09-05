@@ -21,38 +21,26 @@ void FileManager::read(const char* path, string& body) {
 }
 
 // Creates a new file and path writes 'body' to it.
-void FileManager::append(const char *path, char *body) {
+void FileManager::write(const char* path, const string& body, bool append) {
     makePath(path);
-    fstream file(path, ios::out | ios::app);
+    fstream file(path, ios::out | (append ? ios::app : ios::trunc));
     fail(file);
 
     // Write the body content to the file
-    file.write(body, strlen(body));
-    file.close();
-}
-
-// Creates a new file and path writes 'body' to it.
-void FileManager::write(const char* path, char* body) {
-    makePath(path);
-    fstream file(path, ios::out | ios::trunc);
-    fail(file);
-
-    // Write the body content to the file
-    file.write(body, strlen(body));
+    file.write(body.c_str(), body.size());
     file.close();
 }
 
 // Removes the file located at 'path'.
-void FileManager::remove(const char* path) {
-    exists(path);
+bool FileManager::remove(const char* path) {
     boost::filesystem::path p(path);
-    boost::filesystem::remove(p);
+    return boost::filesystem::remove(p);
 }
 
 void FileManager::makePath(const char* path) {
     boost::filesystem::path dir(path);
     if(!(boost::filesystem::exists(dir))){
         if (!boost::filesystem::create_directory(dir))
-            throw HTTP_Status(HTTP_Status::INTERNAL_SERVER_ERROR);
+            throw HTTP_Exception(HTTP_Status::INTERNAL_SERVER_ERROR);
     }
 };

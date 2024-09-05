@@ -1,20 +1,26 @@
 #pragma once
-#include "config.h"
+#include "Config.h"
+#include "HTTP_Status.h"
+
+class HTTP_Response;
 
 class HTTP_Request {
 public:
-    enum Methods { GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS, TRACE };
-    map<string, Methods> to_methods {{"GET",     Methods::GET}, {"PUT", Methods::PUT},
-                                     {"POST",    Methods::POST}, {"DELETE", Methods::DELETE},
-                                     {"PATCH",   Methods::PATCH}, {"HEAD", Methods::HEAD},
-                                     {"OPTIONS", Methods::OPTIONS}, {"TRACE", Methods::TRACE} };
+    enum Method { GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS, TRACE };
+    const map<string, Method> methods {{"GET",     Method::GET}, {"PUT", Method::PUT},
+                                 {"POST",    Method::POST}, {"DELETE", Method::DELETE},
+                                 {"PATCH",   Method::PATCH}, {"HEAD", Method::HEAD},
+                                 {"OPTIONS", Method::OPTIONS}, {"TRACE", Method::TRACE} };
     void insert(const char* buffer);
 
 private:
-    Methods method;
-    string url;
+    Method method;
+    string path;
     string version;
     map<string, string> queryParams;
     map<string, string> headers;
     string body;
+    HTTP_Status status;
+
+    friend HTTP_Response;
 };

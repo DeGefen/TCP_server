@@ -7,4 +7,5 @@ add_library(TCP_server HTTP_Request.cpp Server.cpp Config.h NetworkManager.cpp N
         HTTP_Response.cpp
         HTTP_Response.h
         FileManager.cpp
-        FileManager.h)
+        FileManager.h
+        HTTP_Status.h)
