@@ -26,7 +26,7 @@ void HTTP_Response::prepare() {
                     throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
             }
             break;
-        case HTTP_Request::DELETE:
+        case HTTP_Request::_DELETE:
             if (!FileManager::remove(request.path.c_str()))
                 throw HTTP_Exception(HTTP_Status::NO_CONTENT, "Info: File doesn't exists");
             break;

@@ -33,14 +33,9 @@ void FileManager::write(const char* path, const string& body, bool append) {
 
 // Removes the file located at 'path'.
 bool FileManager::remove(const char* path) {
-    boost::filesystem::path p(path);
-    return boost::filesystem::remove(p);
+    return false;
 }
 
 void FileManager::makePath(const char* path) {
-    boost::filesystem::path dir(path);
-    if(!(boost::filesystem::exists(dir))){
-        if (!boost::filesystem::create_directory(dir))
-            throw HTTP_Exception(HTTP_Status::INTERNAL_SERVER_ERROR);
-    }
+    
 };
