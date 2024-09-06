@@ -1,0 +1,23 @@
+#pragma once
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+using namespace std;
+#pragma comment(lib, "Ws2_32.lib")
+#include <winsock2.h>
+#include <string.h>
+#include <time.h>
+
+#include <boost/filesystem.hpp>
+#include <string>
+#include <vector>
+#include <map>
+#include <vector>
+#include <sstream>
+#include <fstream>
+#include <exception>
+#include <filesystem>
+
+const int PORT = 27015;
+const int MAX_SOCKETS = 60;
+const int BUFFER_SIZE = 8 * 1024; // 8KB

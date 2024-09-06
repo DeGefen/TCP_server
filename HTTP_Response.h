@@ -1,0 +1,30 @@
+#pragma once
+#include "Config.h"
+#include "HTTP_Status.h"
+#include "HTTP_Request.h"
+#include "FileManager.h"
+
+
+class HTTP_Response {
+public:
+    explicit HTTP_Response(const HTTP_Request& request): request(request) {
+        try {
+            prepare();
+        }
+        catch (const HTTP_Exception& e) {
+            status = e.code;
+            body = e.msg;
+        }
+    }
+
+    string extract();
+
+private:
+    void addExtension();
+    void prepare();
+    string version;
+    HTTP_Status status;
+    map<string, string> headers;
+    string body;
+    HTTP_Request request;
+};
