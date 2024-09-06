@@ -11,15 +11,16 @@ public:
         try {
             prepare();
         }
-        catch (const HTTP_Status& e) {
-
+        catch (const HTTP_Exception& e) {
+            status = e.code;
+            body = e.msg;
         }
     }
 
-
-    char* extract();
+    string extract();
 
 private:
+    void addExtension();
     void prepare();
     string version;
     HTTP_Status status;

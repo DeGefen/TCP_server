@@ -3,6 +3,7 @@
 void HTTP_Request::insert(const char* buffer) {
     // reset objects
     try {
+        this->buffer = buffer;
         queryParams.clear();
         headers.clear();
 

@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+
 #include "Config.h"
 
 class HTTP_Status {
@@ -72,9 +74,11 @@ public:
 
 class HTTP_Exception: public exception, public HTTP_Status{
 public:
-    explicit HTTP_Exception(const StatusCode code = OK): HTTP_Status(code) {};
-
+    explicit HTTP_Exception(const StatusCode code = OK, string msg = {})
+                            :HTTP_Status(code), msg(std::move(msg)) {};
+    string msg;
     [[nodiscard]] const char * what() const noexcept override {
         return StatusText.at(code).c_str();
     }
 };
+

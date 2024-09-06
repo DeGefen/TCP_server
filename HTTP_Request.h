@@ -17,6 +17,7 @@ private:
     Method method;
     string path;
     string version;
+    string buffer;
     map<string, string> queryParams;
     map<string, string> headers;
     string body;
