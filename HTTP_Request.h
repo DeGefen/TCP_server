@@ -11,7 +11,7 @@ public:
                                  {"POST",    Method::POST}, {"DELETE", Method::_DELETE},
                                  {"PATCH",   Method::PATCH}, {"HEAD", Method::HEAD},
                                  {"OPTIONS", Method::OPTIONS}, {"TRACE", Method::TRACE} };
-    void insert(const char* buffer);
+    void insert(const char* recvBuffer);
 
 private:
     Method method;

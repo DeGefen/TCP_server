@@ -50,7 +50,7 @@ string HTTP_Response::extract() {
 
 void HTTP_Response::get() {
     if (request.path == RECORDS_PATH) {
-
+        FileManager::list_records();
     }
     else if (request.path.compare(0, sizeof(PAGE_PATH), PAGE_PATH) == 0 &&
              request.path.find_last_of('/') == sizeof(PAGE_PATH))
@@ -72,6 +72,11 @@ void HTTP_Response::put() {
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
 }
 
+
+void HTTP_Response::remove() {
+
+}
+
 void HTTP_Response::addExtension() {
     auto s = request.path.find_last_of('.');
     if (s == string::npos)
@@ -91,5 +96,6 @@ void HTTP_Response::addExtension() {
     s = request.path.find_last_of('.');
     request.body.insert(s, ('/' + q->second));
 }
+
 
 

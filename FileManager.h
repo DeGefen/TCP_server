@@ -11,13 +11,14 @@ public:
     static void write(const char* path, const string& body, bool append = false);
     static bool remove(const char* path);
     static string list_records();
+    static void makePath(const char* path);
     static  void read_directory(const std::string& name, vector<string>& v);
 
 private:
     static void exists(const char* path) {
-        //if () {
-        //    throw HTTP_Exception(HTTP_Status::NOT_FOUND);
-        //}
+        if (experimental::filesystem::exists(path)) {
+            throw HTTP_Exception(HTTP_Status::NOT_FOUND);
+        }
     }
 
     static void fail(fstream& file) {

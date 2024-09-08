@@ -33,20 +33,14 @@ void FileManager::write(const char* path, const string& body, bool append) {
 
 // Removes the file located at 'path'.
 bool FileManager::remove(const char* path) {
-    return false;
+    return experimental::filesystem::remove_all(path);
 }
 
-void FileManager::read_directory(const std::string& name, vector<string>& v)
-{
-    std::string pattern(name);
-    pattern.append("/");
-    WIN32_FIND_DATA data;
-    HANDLE hFind;
-    if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
-        do {
-            v.push_back(data.cFileName);
-        } while (FindNextFile(hFind, &data) != 0);
-        FindClose(hFind);
+void FileManager::makePath(const char* path) {
+    experimental::filesystem::path dir(path);
+    if(!(experimental::filesystem::exists(dir))){
+        if (!experimental::filesystem::create_directory(dir))
+            throw HTTP_Exception(HTTP_Status::INTERNAL_SERVER_ERROR);
     }
 }
 
@@ -63,4 +57,17 @@ string FileManager::list_records() {
         }
     }
     return str.str();
+}
+
+
+void FileManager::read_directory(const std::string& path, vector<string>& v)
+{
+    experimental::filesystem::path dirPath = path;
+    if (experimental::filesystem::exists(dirPath) && experimental::filesystem::is_directory(dirPath)) {
+        for (const auto& entry : experimental::filesystem::directory_iterator(dirPath)) {
+            v.push_back(entry.path().string());
+        }
+    } else {
+        throw HTTP_Exception(HTTP_Status::NOT_FOUND);
+    }
 }

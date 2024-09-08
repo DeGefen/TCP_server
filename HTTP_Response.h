@@ -27,6 +27,7 @@ private:
     void prepare();
     void get();
     void put();
+    void remove();
     string version;
     HTTP_Status status;
     map<string, string> headers;
