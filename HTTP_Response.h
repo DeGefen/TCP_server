@@ -20,8 +20,14 @@ public:
     string extract();
 
 private:
+    static constexpr auto PAGE_PATH = "/pages/";
+    static constexpr auto RECORDS_PATH = "/records";
+
     void addExtension();
     void prepare();
+    void get();
+    void put();
+    void remove();
     string version;
     HTTP_Status status;
     map<string, string> headers;

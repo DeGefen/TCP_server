@@ -33,14 +33,41 @@ void FileManager::write(const char* path, const string& body, bool append) {
 
 // Removes the file located at 'path'.
 bool FileManager::remove(const char* path) {
-    boost::filesystem::path p(path);
-    return boost::filesystem::remove(p);
+    return experimental::filesystem::remove_all(path);
 }
 
 void FileManager::makePath(const char* path) {
-    boost::filesystem::path dir(path);
-    if(!(boost::filesystem::exists(dir))){
-        if (!boost::filesystem::create_directory(dir))
+    experimental::filesystem::path dir(path);
+    if(!(experimental::filesystem::exists(dir))){
+        if (!experimental::filesystem::create_directory(dir))
             throw HTTP_Exception(HTTP_Status::INTERNAL_SERVER_ERROR);
     }
-};
+}
+
+string FileManager::list_records() {
+    vector<string> files;
+    ostringstream str;
+    read_directory("library", files);
+    for (const auto &file: files) {
+        vector<string> languages;
+        str << file << ": " ;
+        read_directory("library/" + file, languages);
+        for (const auto &lang: languages) {
+            str << lang << (lang == languages.back() ? ", " : "\n");
+        }
+    }
+    return str.str();
+}
+
+
+void FileManager::read_directory(const std::string& path, vector<string>& v)
+{
+    experimental::filesystem::path dirPath = path;
+    if (experimental::filesystem::exists(dirPath) && experimental::filesystem::is_directory(dirPath)) {
+        for (const auto& entry : experimental::filesystem::directory_iterator(dirPath)) {
+            v.push_back(entry.path().string());
+        }
+    } else {
+        throw HTTP_Exception(HTTP_Status::NOT_FOUND);
+    }
+}

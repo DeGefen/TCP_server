@@ -6,12 +6,12 @@ class HTTP_Response;
 
 class HTTP_Request {
 public:
-    enum Method { GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS, TRACE };
+    enum Method { GET, PUT, POST, _DELETE, PATCH, HEAD, OPTIONS, TRACE };
     const map<string, Method> methods {{"GET",     Method::GET}, {"PUT", Method::PUT},
-                                 {"POST",    Method::POST}, {"DELETE", Method::DELETE},
+                                 {"POST",    Method::POST}, {"DELETE", Method::_DELETE},
                                  {"PATCH",   Method::PATCH}, {"HEAD", Method::HEAD},
                                  {"OPTIONS", Method::OPTIONS}, {"TRACE", Method::TRACE} };
-    void insert(const char* buffer);
+    void insert(const char* recvBuffer);
 
 private:
     Method method;

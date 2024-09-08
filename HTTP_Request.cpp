@@ -1,9 +1,9 @@
 #include "HTTP_Request.h"
 
-void HTTP_Request::insert(const char* buffer) {
+void HTTP_Request::insert(const char* recvBuffer) {
     // reset objects
     try {
-        this->buffer = buffer;
+        buffer = recvBuffer;
         queryParams.clear();
         headers.clear();
 
@@ -46,4 +46,7 @@ void HTTP_Request::insert(const char* buffer) {
         status = HTTP_Status::INTERNAL_SERVER_ERROR;
     }
 }
+
+
+
 

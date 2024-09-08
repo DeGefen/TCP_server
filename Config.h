@@ -1,14 +1,16 @@
 #pragma once
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 using namespace std;
 #pragma comment(lib, "Ws2_32.lib")
 #include <winsock2.h>
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 #include <string>
 #include <vector>
 #include <map>
@@ -16,7 +18,6 @@ using namespace std;
 #include <sstream>
 #include <fstream>
 #include <exception>
-#include <filesystem>
 
 const int PORT = 27015;
 const int MAX_SOCKETS = 60;
