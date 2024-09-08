@@ -6,25 +6,13 @@ void HTTP_Response::prepare() {
     }
     switch (request.method) {
         case HTTP_Request::GET:
-            {
-                addExtension();
-                FileManager::read(request.path.c_str() ,body);
-            }
+            get();
             break;
         case HTTP_Request::POST:
             cout << request.body;
             break;
         case HTTP_Request::PUT:
-            {
-                addExtension();
-                auto q = request.queryParams.find("mode");
-                if (q == request.queryParams.end() || q->second == "overwrite")
-                    FileManager::write(request.path.c_str(), request.body);
-                else if (q->second == "append")
-                    FileManager::write(request.path.c_str(), request.body, FileManager::APPEND);
-                else
-                    throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
-            }
+            put();
             break;
         case HTTP_Request::_DELETE:
             if (!FileManager::remove(request.path.c_str()))
@@ -59,6 +47,31 @@ string HTTP_Response::extract() {
     return response;
 }
 
+
+void HTTP_Response::get() {
+    if (request.path == RECORDS_PATH) {
+
+    }
+    else if (request.path.compare(0, sizeof(PAGE_PATH), PAGE_PATH) == 0 &&
+             request.path.find_last_of('/') == sizeof(PAGE_PATH))
+    {
+        addExtension();
+        FileManager::read(request.path.c_str(), body);
+    }
+    else throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Invalid URL");
+}
+
+void HTTP_Response::put() {
+    addExtension();
+    auto q = request.queryParams.find("mode");
+    if (q == request.queryParams.end() || q->second == "overwrite")
+        FileManager::write(request.path.c_str(), request.body);
+    else if (q->second == "append")
+        FileManager::write(request.path.c_str(), request.body, FileManager::APPEND);
+    else
+        throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
+}
+
 void HTTP_Response::addExtension() {
     auto s = request.path.find_last_of('.');
     if (s == string::npos)
@@ -78,3 +91,5 @@ void HTTP_Response::addExtension() {
     s = request.path.find_last_of('.');
     request.body.insert(s, ('/' + q->second));
 }
+
+

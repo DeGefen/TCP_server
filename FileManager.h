@@ -10,7 +10,8 @@ public:
     static void read(const char* path, string& body);
     static void write(const char* path, const string& body, bool append = false);
     static bool remove(const char* path);
-    static void makePath(const char* path);
+    static string list_records();
+    static  void read_directory(const std::string& name, vector<string>& v);
 
 private:
     static void exists(const char* path) {

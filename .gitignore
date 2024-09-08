@@ -53,3 +53,9 @@ cmake-build-debug/CMakeFiles/clion-Debug-log.txt
 *.xml
 /.idea
 cmake-build-debug/Testing/Temporary/LastTest.log
+*.json
+*.ninja
+*.cmake
+*.txt
+*.check_cache
+.DS_Store
