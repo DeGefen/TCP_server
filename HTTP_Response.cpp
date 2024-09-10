@@ -6,26 +6,28 @@ void HTTP_Response::prepare() {
     }
     switch (request.method) {
         case HTTP_Request::GET:
-            get();
+            m_GET();
             break;
         case HTTP_Request::POST:
-            cout << request.body;
+            if (!request.path.empty())
+                invalidURL();
+            cout << "Server [message received]: " << request.body << endl;
             break;
         case HTTP_Request::PUT:
-            put();
+            m_PUT();
             break;
-        case HTTP_Request::_DELETE:
-            if (!FileManager::remove(request.path.c_str()))
-                throw HTTP_Exception(HTTP_Status::NO_CONTENT, "Info: File doesn't exists");
+        case HTTP_Request::DELETEE:
+            m_DELETE();
             break;
         case HTTP_Request::TRACE:
+            if (!request.path.empty())
+                invalidURL();
             body = request.buffer;
             break;
         case HTTP_Request::HEAD:
             {
-                addExtension();
-                string buffer;
-                FileManager::read(request.path.c_str(), buffer);
+                m_GET();
+                body.clear();
             }
             break;
         case HTTP_Request::OPTIONS:
@@ -48,53 +50,75 @@ string HTTP_Response::extract() {
 }
 
 
-void HTTP_Response::get() {
+void HTTP_Response::m_GET() {
     if (request.path == RECORDS_PATH) {
-        FileManager::list_records();
+        body = FileManager::list_records();
     }
-    else if (request.path.compare(0, sizeof(PAGE_PATH), PAGE_PATH) == 0 &&
-             request.path.find_last_of('/') == sizeof(PAGE_PATH))
+    else if (request.path.substr(0, request.path.find('/') + 1) == PAGE_PATH)
     {
-        addExtension();
-        FileManager::read(request.path.c_str(), body);
+        formatPath();
+        FileManager::read(request.path, body);
     }
-    else throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Invalid URL");
+    else invalidURL();
 }
 
-void HTTP_Response::put() {
-    addExtension();
+void HTTP_Response::m_PUT() {
+    if (request.path.substr(0, request.path.find('/') + 1) != PAGE_PATH)
+        invalidURL();
+    formatPath();
     auto q = request.queryParams.find("mode");
     if (q == request.queryParams.end() || q->second == "overwrite")
-        FileManager::write(request.path.c_str(), request.body);
+        FileManager::write(request.path, request.body);
     else if (q->second == "append")
-        FileManager::write(request.path.c_str(), request.body, FileManager::APPEND);
+        FileManager::write(request.path, request.body, FileManager::APPEND);
     else
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
 }
 
-
-void HTTP_Response::remove() {
-
+void HTTP_Response::m_DELETE() {
+    formatPath(ALLOW_DIRECTORIES);
+    if (request.path.substr(0, request.path.find('/') + 1) != PAGE_PATH)
+        invalidURL();
+    FileManager::remove(request.path);
 }
 
-void HTTP_Response::addExtension() {
-    auto s = request.path.find_last_of('.');
-    if (s == string::npos)
-        request.body.insert(s, ".html");
-    else if (request.path.compare(s, 5, ".html") != 0 &&
-             request.path.compare(s, 5, ".text") != 0 )
-        throw HTTP_Exception(HTTP_Status::NOT_ACCEPTABLE, "Error: File type not supported");
+void HTTP_Response::formatPath(bool allowDir) {
+    size_t numOfSlashes = count(request.path.begin(), request.path.end(), '/');
+    size_t pos = request.path.find('.');
 
-    s = request.path.find_last_of('/');
-    if (request.path.compare(s + 1, 3, "en.") == 0 ||
-        request.path.compare(s + 1, 3, "he.") == 0 ||
-        request.path.compare(s + 1, 3, "fr.") == 0) return;
-    auto q = request.queryParams.find("lang");
-    if (q == request.queryParams.end()) q->second = "en";
-    else if (q->second != "en" && q->second != "en" && q->second != "fr")
+    if (numOfSlashes >= 3 || numOfSlashes == 0 || (numOfSlashes == 1 && pos != string::npos))
+        invalidURL();
+
+    if (numOfSlashes == 2) {
+        if (pos != string::npos) {
+            if (request.path.substr(pos + 1) != "txt")
+                invalidURL();
+        } else
+            request.path += ".txt";
+    }
+
+    pos = request.path.find_last_of('/');
+    if (pos == request.path.back())
+        invalidURL();
+
+    if (numOfSlashes == 1) {
+        if (allowDir)
+            return;
+        else
+            request.path += ".txt";
+    }
+
+    string subPath = request.path.substr(pos+ 1);
+    if (subPath == "en.txt" || subPath == "he.txt" || subPath == "fr.txt")
+        return;
+
+    auto query = request.queryParams.find("lang");
+    if (query == request.queryParams.end())
+        query->second = "en";
+    else if (query->second != "en" && query->second != "en" && query->second != "fr")
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported language");
-    s = request.path.find_last_of('.');
-    request.body.insert(s, ('/' + q->second));
+    pos = request.path.find_last_of('.');
+    request.path.insert(pos, ('/' + query->second));
 }
 
 
