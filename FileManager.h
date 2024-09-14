@@ -7,19 +7,17 @@ public:
     static constexpr bool APPEND = true;
     static constexpr bool OVERWRITE = false;
 
-    static void read(const char* path, string& body);
-    static void write(const char* path, const string& body, bool append = false);
-    static bool remove(const char* path);
+    static void read(const string &path, string& body);
+    static void write(const string &path, const string& body, bool append = false);
+    static void remove(const string &path);
     static string list_records();
-    static void makePath(const char* path);
-    static  void read_directory(const std::string& name, vector<string>& v);
+    static string list_files();
+    static void makePath(const string& path);
+    static vector<string> readDirectories();
+    static  void readDirectory(const string& name, vector<string>& v);
 
 private:
-    static void exists(const char* path) {
-        if (experimental::filesystem::exists(path)) {
-            throw HTTP_Exception(HTTP_Status::NOT_FOUND);
-        }
-    }
+    static void exists(const string &path);
 
     static void fail(fstream& file) {
         if (file.fail()) {

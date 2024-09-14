@@ -21,6 +21,7 @@ void HTTP_Request::insert(const char* recvBuffer) {
         }
 
         istringstream urlStream(p1);
+        urlStream.ignore(1);
         getline(urlStream, path, '?');
         while (getline(urlStream, p1, '=')) {
             getline(urlStream, p2, '&');
@@ -33,7 +34,7 @@ void HTTP_Request::insert(const char* recvBuffer) {
             p2 = line.substr(colonPos + 2);
             headers[p1] = p2;
         }
-
+        requestStream.ignore(1);
         getline(requestStream, body, '\0');
     }
     catch (const out_of_range& e) {

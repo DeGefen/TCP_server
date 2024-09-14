@@ -91,11 +91,21 @@ void NetworkManager::runServer()
                 nfd--;
                 switch (sockets[i].send)
                 {
+                    case PREPARE:
+                        prepareResponse(i);
+                        break;
                     case SEND:
                         sendMessage(i);
                         break;
                 }
             }
+        }
+
+        time_t t = time(NULL);
+        for (int i = 0; i < MAX_SOCKETS; i++)
+        {
+            if ((t - sockets[i].last_request >= TIMEOUT)
+                removeSocket(i);
         }
     }
 
@@ -117,12 +127,6 @@ bool NetworkManager::addSocket(SOCKET id, int what)
             socketsCount++;
             return (true);
         }
-    }
-
-    unsigned long flag=1;
-    if (ioctlsocket(id, FIONBIO, &flag) != 0)
-    {
-        cout<<"Server: Error at ioctlsocket(): "<<WSAGetLastError()<<endl;
     }
 
     return (false);
@@ -147,8 +151,14 @@ void NetworkManager::acceptConnection(int index)
         cout << "Server: Error at accept(): " << WSAGetLastError() << endl;
         return;
     }
+
     cout << "Server: Client "<<inet_ntoa(from.sin_addr)<<":"<<ntohs(from.sin_port)<<" is connected." << endl;
 
+    unsigned long flag=1;
+    if (ioctlsocket(id, FIONBIO, &flag) != 0)
+    {
+        cout<<"Server: Error at ioctlsocket(): "<<WSAGetLastError()<<endl;
+    }
 
     if (addSocket(msgSocket, RECEIVE) == false)
     {
@@ -165,6 +175,8 @@ void NetworkManager::receiveMessage(int index)
     int len = sockets[index].len;
     int bytesRecv = recv(msgSocket, &sockets[index].buffer[len], sizeof(sockets[index].buffer) - len, 0);
 
+    sockets[index].last_request = time(NULL);
+
     if (SOCKET_ERROR == bytesRecv)
     {
         cout << "Server: Error at recv(): " << WSAGetLastError() << endl;
@@ -178,39 +190,35 @@ void NetworkManager::receiveMessage(int index)
         removeSocket(index);
         return;
     }
-    else
-    {
-        sockets[index].buffer[len + bytesRecv] = '\0'; //add the null-terminating to make it a string
-        cout<<"Server: Recieved: "<<bytesRecv<<" bytes of \""<<&sockets[index].buffer[len]<<"\" message.\n";
 
-        sockets[index].len += bytesRecv + 1;    // "+ 1" to separate each request by '\0'
-        loadMesseage(index);
-    }
-}
+    sockets[index].buffer[len + bytesRecv] = '\0'; //add the null-terminating to make it a string
+    cout<<"Server: Recieved: "<<bytesRecv<<" bytes of \""<<&sockets[index].buffer[len]<<"\" message.\n";
 
-void NetworkManager::loadMesseage (int index) {
+    sockets[index].len += bytesRecv + 1;    // "+ 1" to separate each request by '\0'
     if (sockets[index].len > 0)
-    {
-        sockets[index].send  = RESPONES;
-        sockets[index].request.insert(sockets[index].buffer);
-        int requestSize = strlen(sockets[index].buffer) + 1;
-        memcpy(sockets[index].buffer, sockets[index].buffer + requestSize, sockets[index].len - requestSize);
-    }
-    else sockets[index].send  = IDLE;
+        sockets[index].send  = PREPARE;
+    else
+        sockets[index].send  = IDLE;
 }
 
 void NetworkManager::prepareResponse(int index)
 {
-
+    HTTP_Request request;
+    request.insert(sockets[index].buffer);
+    sockets[index].response(request);
+    int requestSize = strlen(sockets[index].buffer) + 1;
+    memcpy(sockets[index].buffer, sockets[index].buffer + requestSize, sockets[index].len - requestSize);
+    sockets[index].send = SEND;
 }
 
 void NetworkManager::sendMessage(int index)
 {
     int bytesSent = 0;
-    char sendBuff[255];
+    char sendBuff[511];
 
     SOCKET msgSocket = sockets[index].id;
 
+    strcpy(sendBuff, sockets[index].response.extract());
     bytesSent = send(msgSocket, sendBuff, (int)strlen(sendBuff), 0);
     if (SOCKET_ERROR == bytesSent)
     {
@@ -220,5 +228,8 @@ void NetworkManager::sendMessage(int index)
 
     cout<<"Server: Sent: "<<bytesSent<<"\\"<<strlen(sendBuff)<<" bytes of \""<<sendBuff<<"\" message.\n";
 
-    loadMesseage(index);
+    if (sockets[index].len > 0)
+        sockets[index].send  = PREPARE;
+    else
+        sockets[index].send  = IDLE;
 }

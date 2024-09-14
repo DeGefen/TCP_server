@@ -6,9 +6,9 @@ class HTTP_Response;
 
 class HTTP_Request {
 public:
-    enum Method { GET, PUT, POST, _DELETE, PATCH, HEAD, OPTIONS, TRACE };
+    enum Method { GET, PUT, POST, DELETEE, PATCH, HEAD, OPTIONS, TRACE };
     const map<string, Method> methods {{"GET",     Method::GET}, {"PUT", Method::PUT},
-                                 {"POST",    Method::POST}, {"DELETE", Method::_DELETE},
+                                 {"POST",    Method::POST}, {"DELETE", Method::DELETEE},
                                  {"PATCH",   Method::PATCH}, {"HEAD", Method::HEAD},
                                  {"OPTIONS", Method::OPTIONS}, {"TRACE", Method::TRACE} };
     void insert(const char* recvBuffer);
