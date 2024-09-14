@@ -1,6 +1,6 @@
 #pragma once
 #include "Config.h"
-#include "HTTP_Request.h"
+#include "HTTP_Response.h"
 
 class NetworkManager {
 public:
@@ -13,7 +13,8 @@ private:
         SOCKET id;			// Socket handle
         int	recv;			// Receiving?
         int	send;			// Sending?
-        HTTP_Request request;	// Sending sub-type
+        time_t last_request;
+        HTTP_Response response;
         char buffer[BUFFER_SIZE];
         int len;
     };
@@ -22,10 +23,11 @@ private:
     static constexpr int LISTEN  = 1;
     static constexpr int RECEIVE = 2;
     static constexpr int IDLE = 3;
-    static constexpr int RESPONES = 4;
+    static constexpr int PREPARE = 4;
     static constexpr int SEND = 5;
     static constexpr int SEND_TIME = 1;
     static constexpr int SEND_SECONDS = 2;
+    static constexpr int TIMEOUT = 2*60;
 
 
     void initializeServer();
@@ -33,7 +35,6 @@ private:
     void removeSocket(int index);
     void acceptConnection(int index);
     void receiveMessage(int index);
-    void loadMesseage(int index);
     void prepareResponse(int index);
     void sendMessage(int index);
 

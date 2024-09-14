@@ -13,8 +13,8 @@
  *                                        (x) HEAD
  *                                        ( ) OPTIONS
  *
- * TODO:: [ ] ADD:: < > Connection timeout,
- *                  < > Response headers
+ * TODO:: [X] ADD:: <x> Connection timeout,
+ *                  <x> Response headers
  *
  */
 

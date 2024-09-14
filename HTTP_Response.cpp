@@ -36,16 +36,23 @@ void HTTP_Response::prepare() {
         default:
             throw HTTP_Exception(HTTP_Status::SERVICE_UNAVAILABLE, "Error: Service unavailable");
     }
+
 }
 
 string HTTP_Response::extract() {
     string response;
-    response.append(request.version + ' ' + status.extract() + "\n");
-    for (const auto& header: headers) {
-        response.append(header.first + ": " + header.second + "\n");
+    time_t t = time(nullptr);
+    headers["Date"] = ctime(&t);
+    if (!body.empty()) {
+        headers["Content-Type"] = "text/html";
+        headers["Content-Length"] = to_string(body.size());
     }
-    response.append("\r\n");
-    response.append(body);
+    response = request.version + ' ' + status.extract() + '\n';
+    for (const auto& header: headers) {
+        response += header.first + ": " + header.second + '\n';
+    }
+    if (!body.empty())
+        response += '\n' + body;
     return response;
 }
 
