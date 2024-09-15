@@ -15,10 +15,14 @@ public:
             status = e.code;
             body = e.msg;
         }
-//        catch (const exception& e) {      TODO: REMOVE BEFORE FLIGHT
-//            status = HTTP_Status::INTERNAL_SERVER_ERROR;
-//            body = e.what();
-//        }
+        catch (const exception& e) {
+            status = HTTP_Status::INTERNAL_SERVER_ERROR;
+            body = e.what();
+        }
+        catch (...) {
+            status = HTTP_Status::INTERNAL_SERVER_ERROR;
+            body = "Error: Unknow error";
+        }
     }
 
     string extract();
@@ -39,7 +43,7 @@ private:
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Invalid URL");
     }
 
-    string version;
+    string version = "http/1.1";
     HTTP_Status status;
     map<string, string> headers;
     string body;

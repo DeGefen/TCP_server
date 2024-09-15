@@ -52,38 +52,26 @@ void FileManager::makePath(const string& path) {
     }
 }
 
+
 string FileManager::list_files() {
     string records;
+    bool flag_first = true;
     auto paths = readDirectories();
-    for (const auto& path: paths) {
-        size_t tabCount = count(path.begin(), path.end(), '/');
-        while (--tabCount) records.append("\t");
-        string file = path.substr(path.find_last_of('/')+ 1);
+    for (const auto& path : paths) {
+        size_t tabCount = count(path.begin(), path.end(), PATH_SEPARATOR);
+        //while (--tabCount) records.append("\t");
+        string file = path.substr(path.find_last_of(PATH_SEPARATOR) + 1);
         size_t pos = file.find('.');
-        if (pos == string::npos)
-            records.append(file + ":\n");
-        else
-            records.append(file.substr(0, pos) + "\n");
-    }
-    return records;
-}
-
-string FileManager::list_records() {
-    string records;
-    auto paths = readDirectories();
-    for (const auto& path: paths) {
-        string file = path.substr(path.find_last_of('/')+ 1);
-        size_t pos= file.find('.');
-        if (pos== string::npos) {
-            records.pop_back();
-            if (path != paths.front())
-                records.append("\n");
-            size_t tabCount = count(path.begin(), path.end(), '/');
-            while (--tabCount) records.append("\t");
-            records.append(file + ": ");
+        if (pos == string::npos) {
+            if (!flag_first) {
+                records.pop_back();
+                records += '\n';
+            }
+            records += file + ':';
         }
         else
-            records.append(' ' + file.substr(0, pos) + ",");
+            records += ' ' + file.substr(0, pos) + ',';
+        flag_first = false;
     }
     records.pop_back();
     return records;
@@ -91,25 +79,13 @@ string FileManager::list_records() {
 
 vector<string> FileManager::readDirectories() {
     vector<string> files;
-    for (auto const &dir_entry: fs::recursive_directory_iterator("pages")) {
+    for (auto const& dir_entry : fs::recursive_directory_iterator("pages")) {
         string path = dir_entry.path().string();
-        if (path[path.find_last_of('/') + 1] != '.')
+        if (path[path.find_last_of(PATH_SEPARATOR) + 1] != '.')
             files.push_back(path);
     }
     sort(files.begin(), files.end());
     return files;
-}
-
-void FileManager::readDirectory(const string& name, vector<string>& v)
-{
-    if (fs::exists(name) && fs::is_directory(name)) {
-        for (const auto& entry : fs::directory_iterator(name)) {
-            v.push_back(entry.path().string());
-        }
-    }
-    else {
-        throw HTTP_Exception(HTTP_Status::NOT_FOUND);
-    }
 }
 
 void FileManager::exists(const string &path) {
@@ -128,6 +104,12 @@ void FileManager::exists(const string &path) {
             errorMsg.append(" in " + lang);
         }
         throw HTTP_Exception(HTTP_Status::NOT_FOUND, errorMsg);
+    }
+}
+
+void FileManager::initRecords() {
+    if (!fs::exists("pages")) {
+        write("/en.txt", "H");
     }
 }
 

@@ -2,7 +2,7 @@
 
 void HTTP_Response::prepare() {
     if (request.status.code != HTTP_Status::OK) {
-        throw HTTP_Exception(request.status.code);
+        throw HTTP_Exception(request.status.code, request.errorMSG);
     }
     switch (request.method) {
         case HTTP_Request::GET:
@@ -12,12 +12,15 @@ void HTTP_Response::prepare() {
             if (!request.path.empty())
                 invalidURL();
             cout << "Server [message received]: " << request.body << endl;
+            status = HTTP_Status::NO_CONTENT;
             break;
         case HTTP_Request::PUT:
             m_PUT();
+            status = HTTP_Status::NO_CONTENT;
             break;
         case HTTP_Request::DELETEE:
             m_DELETE();
+            status = HTTP_Status::NO_CONTENT;
             break;
         case HTTP_Request::TRACE:
             if (!request.path.empty())
@@ -25,13 +28,15 @@ void HTTP_Response::prepare() {
             body = request.buffer;
             break;
         case HTTP_Request::HEAD:
-            {
-                m_GET();
-                body.clear();
-            }
+            m_GET();
+            body.clear();
+            status = HTTP_Status::NO_CONTENT;
             break;
         case HTTP_Request::OPTIONS:
-
+            if (!request.path.empty())
+                invalidURL();
+            headers["Allow"] = "GET, POST, PUT, DELETE, TRACE, HEAD";
+            status = HTTP_Status::NO_CONTENT;
             break;
         default:
             throw HTTP_Exception(HTTP_Status::SERVICE_UNAVAILABLE, "Error: Service unavailable");
@@ -45,21 +50,24 @@ string HTTP_Response::extract() {
     headers["Date"] = ctime(&t);
     if (!body.empty()) {
         headers["Content-Type"] = "text/html";
-        headers["Content-Length"] = to_string(body.size());
+        headers["Content-Length"] = to_string(body.size() + 2);
     }
-    response = request.version + ' ' + status.extract() + '\n';
+    else
+        headers["Content-Length"] = "0";
+    response = version + ' ' + status.extract() + "\r\n";
     for (const auto& header: headers) {
-        response += header.first + ": " + header.second + '\n';
+        response += header.first + ": " + header.second + "\r\n";
     }
     if (!body.empty())
-        response += '\n' + body;
+        response += body + "\r\n";
+
     return response;
 }
 
 
 void HTTP_Response::m_GET() {
     if (request.path == RECORDS_PATH) {
-        body = FileManager::list_records();
+        body = FileManager::list_files();
     }
     else if (request.path.substr(0, request.path.find('/') + 1) == PAGE_PATH)
     {
@@ -119,13 +127,16 @@ void HTTP_Response::formatPath(bool allowDir) {
     if (subPath == "en.txt" || subPath == "he.txt" || subPath == "fr.txt")
         return;
 
+    string lang;
     auto query = request.queryParams.find("lang");
     if (query == request.queryParams.end())
-        query->second = "en";
-    else if (query->second != "en" && query->second != "en" && query->second != "fr")
+        lang = "en";
+    else if (query->second != "he" && query->second != "en" && query->second != "fr")
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported language");
+    else
+        lang = query->second;
     pos = request.path.find_last_of('.');
-    request.path.insert(pos, ('/' + query->second));
+    request.path.insert(pos, ('/' + lang));
 }
 
 

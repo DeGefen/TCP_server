@@ -10,13 +10,13 @@ public:
     static void read(const string &path, string& body);
     static void write(const string &path, const string& body, bool append = false);
     static void remove(const string &path);
-    static string list_records();
     static string list_files();
     static void makePath(const string& path);
     static vector<string> readDirectories();
-    static  void readDirectory(const string& name, vector<string>& v);
+    static void initRecords();
 
 private:
+    static constexpr auto PATH_SEPARATOR = '\\';
     static void exists(const string &path);
 
     static void fail(fstream& file) {

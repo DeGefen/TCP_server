@@ -35,9 +35,12 @@ void NetworkManager::initializeServer()
         WSACleanup();
         return;
     }
+    cout << "starting server" << endl;
+
+    addSocket(listenSocket, LISTEN);
 }
 
-void NetworkManager::runServer()
+void NetworkManager::run()
 {
     while (true)
     {
@@ -53,7 +56,7 @@ void NetworkManager::runServer()
         FD_ZERO(&waitSend);
         for (int i = 0; i < MAX_SOCKETS; i++)
         {
-            if (sockets[i].send == SEND)
+            if (sockets[i].send == SEND || sockets[i].send == PREPARE)
                 FD_SET(sockets[i].id, &waitSend);
         }
 
@@ -101,10 +104,9 @@ void NetworkManager::runServer()
             }
         }
 
-        time_t t = time(NULL);
-        for (int i = 0; i < MAX_SOCKETS; i++)
+        for (int i = 1; i < MAX_SOCKETS; i++)
         {
-            if ((t - sockets[i].last_request >= TIMEOUT)
+            if (sockets[i].recv != EMPTY && time(nullptr) - sockets[i].last_request >= TIMEOUT)
                 removeSocket(i);
         }
     }
@@ -116,13 +118,26 @@ void NetworkManager::runServer()
 
 bool NetworkManager::addSocket(SOCKET id, int what)
 {
+
+    unsigned long flag = 1;
+    if (ioctlsocket(id, FIONBIO, &flag) != 0)
+    {
+        cout << "Server: Error at ioctlsocket(): " << WSAGetLastError() << endl;
+    }
+    
     for (int i = 0; i < MAX_SOCKETS; i++)
     {
         if (sockets[i].recv == EMPTY)
         {
+#ifdef _DEBUGING_SERVER
+            cout << "Server: in \"addSocket\" - id " << id << endl;;
+#endif // _DEBUGING_SERVER
+
             sockets[i].id = id;
             sockets[i].recv = what;
             sockets[i].send = IDLE;
+            sockets[i].last_request = time(nullptr);
+            sockets[i].response = nullptr;
             sockets[i].len = 0;
             socketsCount++;
             return (true);
@@ -134,6 +149,10 @@ bool NetworkManager::addSocket(SOCKET id, int what)
 
 void NetworkManager::removeSocket(int index)
 {
+#ifdef _DEBUGING_SERVER
+    cout << "Server: in \"removeSocket\" - index " << index << endl;
+#endif // _DEBUGING_SERVER
+
     sockets[index].recv = EMPTY;
     sockets[index].send = EMPTY;
     socketsCount--;
@@ -141,6 +160,10 @@ void NetworkManager::removeSocket(int index)
 
 void NetworkManager::acceptConnection(int index)
 {
+#ifdef _DEBUGING_SERVER
+    cout << "Server: in \"acceptConnection\" - index " << index << endl;;
+#endif // _DEBUGING_SERVER
+
     SOCKET id = sockets[index].id;
     struct sockaddr_in from;		// Address of sending partner
     int fromLen = sizeof(from);
@@ -154,11 +177,6 @@ void NetworkManager::acceptConnection(int index)
 
     cout << "Server: Client "<<inet_ntoa(from.sin_addr)<<":"<<ntohs(from.sin_port)<<" is connected." << endl;
 
-    unsigned long flag=1;
-    if (ioctlsocket(id, FIONBIO, &flag) != 0)
-    {
-        cout<<"Server: Error at ioctlsocket(): "<<WSAGetLastError()<<endl;
-    }
 
     if (addSocket(msgSocket, RECEIVE) == false)
     {
@@ -170,12 +188,16 @@ void NetworkManager::acceptConnection(int index)
 
 void NetworkManager::receiveMessage(int index)
 {
+#ifdef _DEBUGING_SERVER
+    cout << "Server: in \"receiveMessage\" - index " << index << endl;;
+#endif // _DEBUGING_SERVER
+
     SOCKET msgSocket = sockets[index].id;
 
     int len = sockets[index].len;
     int bytesRecv = recv(msgSocket, &sockets[index].buffer[len], sizeof(sockets[index].buffer) - len, 0);
 
-    sockets[index].last_request = time(NULL);
+    sockets[index].last_request = time(nullptr);
 
     if (SOCKET_ERROR == bytesRecv)
     {
@@ -186,13 +208,16 @@ void NetworkManager::receiveMessage(int index)
     }
     if (bytesRecv == 0)
     {
+#ifdef _DEBUGING_SERVER
+        cout << "Server: index " << index << " finished" << endl;;
+#endif // _DEBUGING_SERVER
         closesocket(msgSocket);
         removeSocket(index);
         return;
     }
 
     sockets[index].buffer[len + bytesRecv] = '\0'; //add the null-terminating to make it a string
-    cout<<"Server: Recieved: "<<bytesRecv<<" bytes of \""<<&sockets[index].buffer[len]<<"\" message.\n";
+    cout<<"Server: Recieved: "<<bytesRecv<<" bytes of \n\""<<&sockets[index].buffer[len]<<"\" message.\n";
 
     sockets[index].len += bytesRecv + 1;    // "+ 1" to separate each request by '\0'
     if (sockets[index].len > 0)
@@ -203,22 +228,36 @@ void NetworkManager::receiveMessage(int index)
 
 void NetworkManager::prepareResponse(int index)
 {
+#ifdef _DEBUGING_SERVER
+    cout << "Server: in \"prepareResponse\" - index " << index << endl;;
+#endif // _DEBUGING_SERVER
+
     HTTP_Request request;
     request.insert(sockets[index].buffer);
-    sockets[index].response(request);
+    sockets[index].response = new HTTP_Response(request);
     int requestSize = strlen(sockets[index].buffer) + 1;
     memcpy(sockets[index].buffer, sockets[index].buffer + requestSize, sockets[index].len - requestSize);
+    sockets[index].len -= requestSize;
     sockets[index].send = SEND;
 }
 
 void NetworkManager::sendMessage(int index)
 {
+#ifdef _DEBUGING_SERVER
+    cout << "Server: in \"sendMessage\" - index " << index << endl;;
+#endif // _DEBUGING_SERVER
+
     int bytesSent = 0;
-    char sendBuff[511];
+    char sendBuff[BUFFER_SIZE];
 
     SOCKET msgSocket = sockets[index].id;
 
-    strcpy(sendBuff, sockets[index].response.extract());
+    try {
+        strcpy(sendBuff, sockets[index].response->extract().c_str());
+    }
+    catch (...) {
+        
+    }
     bytesSent = send(msgSocket, sendBuff, (int)strlen(sendBuff), 0);
     if (SOCKET_ERROR == bytesSent)
     {
@@ -227,7 +266,8 @@ void NetworkManager::sendMessage(int index)
     }
 
     cout<<"Server: Sent: "<<bytesSent<<"\\"<<strlen(sendBuff)<<" bytes of \""<<sendBuff<<"\" message.\n";
-
+    
+    delete sockets[index].response;
     if (sockets[index].len > 0)
         sockets[index].send  = PREPARE;
     else

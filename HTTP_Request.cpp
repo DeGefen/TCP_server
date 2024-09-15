@@ -1,7 +1,6 @@
 #include "HTTP_Request.h"
 
 void HTTP_Request::insert(const char* recvBuffer) {
-    // reset objects
     try {
         buffer = recvBuffer;
         queryParams.clear();
@@ -17,7 +16,7 @@ void HTTP_Request::insert(const char* recvBuffer) {
 
         lineStream >> p1 >> version;
         if (version != "HTTP/1.1") {
-            throw HTTP_Exception(HTTP_Status::HTTP_VERSION_NOT_SUPPORTED);
+            throw HTTP_Exception(HTTP_Status::HTTP_VERSION_NOT_SUPPORTED, "Error: This server support only HTTP/1.1");
         }
 
         istringstream urlStream(p1);
@@ -28,23 +27,26 @@ void HTTP_Request::insert(const char* recvBuffer) {
             queryParams[p1] = p2;
         }
 
-        while (requestStream.peek() != '\n' && getline(requestStream, line)) {
+        while (requestStream.peek() != '\n' && requestStream.peek() != '\r' && getline(requestStream, line)) {
             size_t colonPos = line.find(':');
             p1 = line.substr(0, colonPos);
             p2 = line.substr(colonPos + 2);
             headers[p1] = p2;
         }
-        requestStream.ignore(1);
+        getline(requestStream, body); // remove empty line
         getline(requestStream, body, '\0');
     }
     catch (const out_of_range& e) {
         status = HTTP_Status::METHOD_NOT_ALLOWED;
+        errorMSG = "Error: Unsupprted method";
     }
     catch (const HTTP_Exception& e) {
         status = e.code;
+        errorMSG = e.msg;
     }
     catch (exception& e) {
         status = HTTP_Status::INTERNAL_SERVER_ERROR;
+        errorMSG = "Error: Unknow error has occurred";
     }
 }
 

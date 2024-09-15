@@ -4,8 +4,8 @@
 
 class NetworkManager {
 public:
-    NetworkManager() { void initializeServer();}
-    void runServer();
+    NetworkManager() { initializeServer();}
+    void run();
 
 private:
     struct SocketState
@@ -14,7 +14,7 @@ private:
         int	recv;			// Receiving?
         int	send;			// Sending?
         time_t last_request;
-        HTTP_Response response;
+        HTTP_Response *response;
         char buffer[BUFFER_SIZE];
         int len;
     };
@@ -25,8 +25,6 @@ private:
     static constexpr int IDLE = 3;
     static constexpr int PREPARE = 4;
     static constexpr int SEND = 5;
-    static constexpr int SEND_TIME = 1;
-    static constexpr int SEND_SECONDS = 2;
     static constexpr int TIMEOUT = 2*60;
 
 

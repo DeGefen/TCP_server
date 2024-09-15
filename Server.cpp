@@ -1,17 +1,16 @@
 #include "Config.h"
-//#include "NetworkManager.h"
-#include "HTTP_Response.h"
+#include "NetworkManager.h"
 
 /*
- * TODO:: [ ] CHECK:: <x> FileManager,
+ * TODO:: [x] CHECK:: <x> FileManager,
  *                    <x> HTTP_Request,
- *                    < > HTTP_Response:: (x) GET
+ *                    <x> HTTP_Response:: (x) GET
  *                                        (x) POST
  *                                        (x) PUT
  *                                        (x) DELETE
  *                                        (x) TRACE
  *                                        (x) HEAD
- *                                        ( ) OPTIONS
+ *                                        (x) OPTIONS
  *
  * TODO:: [X] ADD:: <x> Connection timeout,
  *                  <x> Response headers
@@ -20,10 +19,8 @@
 
 int main()
 {
-    string recvHTTP;
-    FileManager::read("http.txt", recvHTTP);
-    HTTP_Request request;
-    request.insert(recvHTTP.c_str());
-    HTTP_Response response(request);
-    cout << response.extract();
+    FileManager::makePath("pages/file1/en.txt");
+    FileManager::write("pages/file1/en.txt", "hello");
+    NetworkManager server;
+    server.run();
 }
