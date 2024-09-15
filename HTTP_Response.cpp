@@ -67,7 +67,7 @@ string HTTP_Response::extract() {
 
 void HTTP_Response::m_GET() {
     if (request.path == RECORDS_PATH) {
-        body = FileManager::list_files();
+        body = FileManager::listFiles();
     }
     else if (request.path.substr(0, request.path.find('/') + 1) == PAGE_PATH)
     {
@@ -137,6 +137,8 @@ void HTTP_Response::formatPath(bool allowDir) {
         lang = query->second;
     pos = request.path.find_last_of('.');
     request.path.insert(pos, ('/' + lang));
+
+    request.path.insert(0, FileManager::FILE_DIRECTORY);
 }
 
 

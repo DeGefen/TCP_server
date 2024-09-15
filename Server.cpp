@@ -2,7 +2,7 @@
 #include "NetworkManager.h"
 
 /*
- * TODO:: [x] CHECK:: <x> FileManager,
+ * TODO:: [ ] CHECK:: <x> FileManager,
  *                    <x> HTTP_Request,
  *                    <x> HTTP_Response:: (x) GET
  *                                        (x) POST
@@ -11,16 +11,17 @@
  *                                        (x) TRACE
  *                                        (x) HEAD
  *                                        (x) OPTIONS
+ *                    <x> server path recognition
  *
  * TODO:: [X] ADD:: <x> Connection timeout,
  *                  <x> Response headers
+ *                  < > error handling for when server sending informtion
+
+ * TODO:: [X] REFRACTOR:: <x> paths to C:\temp\pages
  *
  */
 
-int main()
-{
-    FileManager::makePath("pages/file1/en.txt");
-    FileManager::write("pages/file1/en.txt", "hello");
+int main() {
     NetworkManager server;
     server.run();
 }

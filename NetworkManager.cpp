@@ -252,12 +252,8 @@ void NetworkManager::sendMessage(int index)
 
     SOCKET msgSocket = sockets[index].id;
 
-    try {
-        strcpy(sendBuff, sockets[index].response->extract().c_str());
-    }
-    catch (...) {
-        
-    }
+    strcpy(sendBuff, sockets[index].response->extract().c_str());
+ 
     bytesSent = send(msgSocket, sendBuff, (int)strlen(sendBuff), 0);
     if (SOCKET_ERROR == bytesSent)
     {

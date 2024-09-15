@@ -24,7 +24,7 @@ void FileManager::read(const string &path, string& body) {
 void FileManager::write(const string &path, const string& body, bool append) {
     makePath(path);
     fstream file(path, ios::out | (append ? ios::app: ios::trunc));
-    fail(file);
+    //fail(file);
 
     // Write the body content to the file
     file.write(body.c_str(), body.size());
@@ -33,18 +33,20 @@ void FileManager::write(const string &path, const string& body, bool append) {
 
 // Removes the file located at 'path'.
 void FileManager::remove(const string &path) {
+    char separator = pathSeparator(path);
     exists (path);
     fs::remove_all(path);
     size_t pos = path.find('.');
     if (pos != string::npos) {
-        string dirPath = path.substr(0, path.find_last_of('/'));
+        string dirPath = path.substr(0, path.find_last_of(separator));
         if (fs::is_empty(dirPath))
             fs::remove_all(dirPath);
     }
 }
 
 void FileManager::makePath(const string& path) {
-    size_t pos= path.find_last_of('/');
+    char separator = pathSeparator(path);
+    size_t pos= path.find_last_of(separator);
     string dirPath = path.substr(0, pos);
     if(!(fs::exists(dirPath))){
         if (!fs::create_directory(dirPath))
@@ -53,13 +55,12 @@ void FileManager::makePath(const string& path) {
 }
 
 
-string FileManager::list_files() {
+string FileManager::listFiles() {
     string records;
     bool flag_first = true;
     auto paths = readDirectories();
     for (const auto& path : paths) {
         size_t tabCount = count(path.begin(), path.end(), PATH_SEPARATOR);
-        //while (--tabCount) records.append("\t");
         string file = path.substr(path.find_last_of(PATH_SEPARATOR) + 1);
         size_t pos = file.find('.');
         if (pos == string::npos) {
@@ -79,7 +80,9 @@ string FileManager::list_files() {
 
 vector<string> FileManager::readDirectories() {
     vector<string> files;
-    for (auto const& dir_entry : fs::recursive_directory_iterator("pages")) {
+    string root_path = FILE_DIRECTORY;
+    root_path += "pages";
+    for (auto const& dir_entry : fs::recursive_directory_iterator(root_path)) {
         string path = dir_entry.path().string();
         if (path[path.find_last_of(PATH_SEPARATOR) + 1] != '.')
             files.push_back(path);
@@ -89,17 +92,20 @@ vector<string> FileManager::readDirectories() {
 }
 
 void FileManager::exists(const string &path) {
+    char separator = pathSeparator(path);
     if (!fs::exists(path)) {
         string file;
+        size_t path_index = path.find("pages") + 6;
         size_t pos = path.find('.') ;
         if (pos == string::npos)
-            file = path.substr(path.find('/') + 1);
+            file = path.substr(path_index);
         else
-            file = path.substr(path.find('/') + 1, path.find('/'));
+            file = path.substr(path_index);
+        file = file.substr(0, file.find_last_of(separator));
 
         string errorMsg = "Error: No records of \"" + file + '"';
-        if (pos != string::npos && fs::exists(path.substr(0, path.find_last_of('/')))) {
-            string lang = path.substr(path.find_last_of('/') + 1, 2);
+        if (pos != string::npos && fs::exists(path.substr(0, path.find_last_of(separator)))) {
+            string lang = path.substr(path.find_last_of(separator) + 1, 2);
             transform(lang.begin(), lang.end(), lang.begin(), ::toupper);
             errorMsg.append(" in " + lang);
         }
@@ -107,10 +113,5 @@ void FileManager::exists(const string &path) {
     }
 }
 
-void FileManager::initRecords() {
-    if (!fs::exists("pages")) {
-        write("/en.txt", "H");
-    }
-}
 
 
