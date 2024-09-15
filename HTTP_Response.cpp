@@ -16,7 +16,7 @@ void HTTP_Response::prepare() {
             break;
         case HTTP_Request::PUT:
             m_PUT();
-            status = HTTP_Status::NO_CONTENT;
+            status = HTTP_Status::CREATED;
             break;
         case HTTP_Request::DELETEE:
             m_DELETE();
@@ -69,7 +69,7 @@ void HTTP_Response::m_GET() {
     if (request.path == RECORDS_PATH) {
         body = FileManager::listFiles();
     }
-    else if (request.path.substr(0, request.path.find('/') + 1) == PAGE_PATH)
+    else if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) == PAGE_PATH)
     {
         formatPath();
         FileManager::read(request.path, body);
@@ -78,7 +78,7 @@ void HTTP_Response::m_GET() {
 }
 
 void HTTP_Response::m_PUT() {
-    if (request.path.substr(0, request.path.find('/') + 1) != PAGE_PATH)
+    if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) != PAGE_PATH)
         invalidURL();
     formatPath();
     auto q = request.queryParams.find("mode");
@@ -91,14 +91,14 @@ void HTTP_Response::m_PUT() {
 }
 
 void HTTP_Response::m_DELETE() {
-    formatPath(ALLOW_DIRECTORIES);
-    if (request.path.substr(0, request.path.find('/') + 1) != PAGE_PATH)
+    if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) != PAGE_PATH)
         invalidURL();
+    formatPath(ALLOW_DIRECTORIES);
     FileManager::remove(request.path);
 }
 
 void HTTP_Response::formatPath(bool allowDir) {
-    size_t numOfSlashes = count(request.path.begin(), request.path.end(), '/');
+    size_t numOfSlashes = count(request.path.begin(), request.path.end(), FileManager::POSIX_PATH_SEPARATOR);
     size_t pos = request.path.find('.');
 
     if (numOfSlashes >= 3 || numOfSlashes == 0 || (numOfSlashes == 1 && pos != string::npos))
@@ -112,32 +112,32 @@ void HTTP_Response::formatPath(bool allowDir) {
             request.path += ".txt";
     }
 
-    pos = request.path.find_last_of('/');
+    pos = request.path.find_last_of(FileManager::POSIX_PATH_SEPARATOR);
     if (pos == request.path.back())
         invalidURL();
 
     if (numOfSlashes == 1) {
-        if (allowDir)
+        if (allowDir) {
+            request.path.insert(0, FileManager::FILE_DIRECTORY);
             return;
+        }
         else
             request.path += ".txt";
     }
 
     string subPath = request.path.substr(pos+ 1);
-    if (subPath == "en.txt" || subPath == "he.txt" || subPath == "fr.txt")
-        return;
-
-    string lang;
-    auto query = request.queryParams.find("lang");
-    if (query == request.queryParams.end())
-        lang = "en";
-    else if (query->second != "he" && query->second != "en" && query->second != "fr")
-        throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported language");
-    else
-        lang = query->second;
-    pos = request.path.find_last_of('.');
-    request.path.insert(pos, ('/' + lang));
-
+    if (subPath != "en.txt" && subPath != "he.txt" && subPath != "fr.txt") {
+        string lang;
+        auto query = request.queryParams.find("lang");
+        if (query == request.queryParams.end())
+            lang = "en";
+        else if (query->second != "he" && query->second != "en" && query->second != "fr")
+            throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported language");
+        else
+            lang = query->second;
+        pos = request.path.find_last_of('.');
+        request.path.insert(pos, (FileManager::POSIX_PATH_SEPARATOR + lang));
+    }
     request.path.insert(0, FileManager::FILE_DIRECTORY);
 }
 

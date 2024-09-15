@@ -2,7 +2,7 @@
 #include "NetworkManager.h"
 
 /*
- * TODO:: [ ] CHECK:: <x> FileManager,
+ * TODO:: [X] CHECK:: <x> FileManager,
  *                    <x> HTTP_Request,
  *                    <x> HTTP_Response:: (x) GET
  *                                        (x) POST
@@ -15,10 +15,8 @@
  *
  * TODO:: [X] ADD:: <x> Connection timeout,
  *                  <x> Response headers
- *                  < > error handling for when server sending informtion
-
+ * 
  * TODO:: [X] REFRACTOR:: <x> paths to C:\temp\pages
- *
  */
 
 int main() {
