@@ -1,5 +1,7 @@
 #include "HTTP_Response.h"
 
+// Prepares the HTTP response based on the request method and status.
+// Throws an exception if the request status is not OK.
 void HTTP_Response::prepare() {
     if (request.status.code != HTTP_Status::OK) {
         throw HTTP_Exception(request.status.code, request.errorMSG);
@@ -41,9 +43,10 @@ void HTTP_Response::prepare() {
         default:
             throw HTTP_Exception(HTTP_Status::SERVICE_UNAVAILABLE, "Error: Service unavailable");
     }
-
 }
 
+
+// Builds the full HTTP response string, including headers and body.
 string HTTP_Response::extract() {
     string response;
     time_t t = time(nullptr);
@@ -51,32 +54,32 @@ string HTTP_Response::extract() {
     if (!body.empty()) {
         headers["Content-Type"] = "text/html";
         headers["Content-Length"] = to_string(body.size() + 2);
-    }
-    else
+    } else {
         headers["Content-Length"] = "0";
+    }
     response = version + ' ' + status.extract() + "\r\n";
     for (const auto& header: headers) {
         response += header.first + ": " + header.second + "\r\n";
     }
-    if (!body.empty())
+    if (!body.empty()) {
         response += body + "\r\n";
-
+    }
     return response;
 }
 
-
+// Handles GET requests. Reads file content or lists files.
 void HTTP_Response::m_GET() {
     if (request.path == RECORDS_PATH) {
         body = FileManager::listFiles();
-    }
-    else if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) == PAGE_PATH)
-    {
+    } else if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) == PAGE_PATH) {
         formatPath();
         FileManager::read(request.path, body);
+    } else {
+        invalidURL();
     }
-    else invalidURL();
 }
 
+// Handles PUT requests. Writes or appends content to files.
 void HTTP_Response::m_PUT() {
     if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) != PAGE_PATH)
         invalidURL();
@@ -90,6 +93,7 @@ void HTTP_Response::m_PUT() {
         throw HTTP_Exception(HTTP_Status::BAD_REQUEST, "Error: Unsupported mode");
 }
 
+// Handles DELETE requests. Deletes the specified file.
 void HTTP_Response::m_DELETE() {
     if (request.path.substr(0, request.path.find(FileManager::POSIX_PATH_SEPARATOR) + 1) != PAGE_PATH)
         invalidURL();
@@ -97,6 +101,8 @@ void HTTP_Response::m_DELETE() {
     FileManager::remove(request.path);
 }
 
+// Formats and validates the request path.
+// Adds file extensions or directories when needed.
 void HTTP_Response::formatPath(bool allowDir) {
     size_t numOfSlashes = count(request.path.begin(), request.path.end(), FileManager::POSIX_PATH_SEPARATOR);
     size_t pos = request.path.find('.');
@@ -108,8 +114,9 @@ void HTTP_Response::formatPath(bool allowDir) {
         if (pos != string::npos) {
             if (request.path.substr(pos + 1) != "txt")
                 invalidURL();
-        } else
+        } else {
             request.path += ".txt";
+        }
     }
 
     pos = request.path.find_last_of(FileManager::POSIX_PATH_SEPARATOR);
@@ -120,12 +127,12 @@ void HTTP_Response::formatPath(bool allowDir) {
         if (allowDir) {
             request.path.insert(0, FileManager::FILE_DIRECTORY);
             return;
-        }
-        else
+        } else {
             request.path += ".txt";
+        }
     }
 
-    string subPath = request.path.substr(pos+ 1);
+    string subPath = request.path.substr(pos + 1);
     if (subPath != "en.txt" && subPath != "he.txt" && subPath != "fr.txt") {
         string lang;
         auto query = request.queryParams.find("lang");
@@ -140,6 +147,3 @@ void HTTP_Response::formatPath(bool allowDir) {
     }
     request.path.insert(0, FileManager::FILE_DIRECTORY);
 }
-
-
-

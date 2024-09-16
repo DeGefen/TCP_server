@@ -14,7 +14,7 @@
 #include <sstream>
 #include <fstream>
 #include <exception>
-//#include <unistd.h>
+#include <utility>
 #include <climits>
 
 #include <string>
@@ -29,5 +29,3 @@ namespace fs = std::experimental::filesystem;
 const int PORT = 27015;
 const int MAX_SOCKETS = 60;
 const int BUFFER_SIZE = 8 * 1024; // 8KB
-
-//#define _DEBUGING_SERVER

@@ -2,8 +2,10 @@
 #include "Config.h"
 #include "HTTP_Status.h"
 
+
 class HTTP_Response;
 
+// class for registering and storing requests
 class HTTP_Request {
 public:
 
