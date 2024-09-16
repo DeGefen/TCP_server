@@ -44,6 +44,7 @@ void FileManager::remove(const string &path) {
     }
 }
 
+// creates all directories in a given path
 void FileManager::makePath(const string& path) {
     char separator = pathSeparator(path);
     size_t pos= path.find_last_of(separator);
@@ -54,7 +55,7 @@ void FileManager::makePath(const string& path) {
     }
 }
 
-
+// formated list of the entire file system
 string FileManager::listFiles() {
     string records;
     bool flag_first = true;
@@ -78,6 +79,7 @@ string FileManager::listFiles() {
     return records;
 }
 
+// reads all directories in file system
 vector<string> FileManager::readDirectories() {
     vector<string> files;
     string root_path = FILE_DIRECTORY;
@@ -91,6 +93,7 @@ vector<string> FileManager::readDirectories() {
     return files;
 }
 
+// checks if a file exists
 void FileManager::exists(const string &path) {
     char separator = pathSeparator(path);
     if (!fs::exists(path)) {

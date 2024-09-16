@@ -1,5 +1,6 @@
 #include "HTTP_Request.h"
 
+// convert HTTP string format into parameters for prospering
 void HTTP_Request::insert(const char* recvBuffer) {
     try {
         buffer = recvBuffer;
@@ -9,16 +10,19 @@ void HTTP_Request::insert(const char* recvBuffer) {
         string line, p1, p2;
         istringstream requestStream(buffer);
 
+        // get the HTTP method
         getline(requestStream, line);
         istringstream lineStream(line);
         lineStream >> p1;
         method = methods.at(p1);
 
+        // get and check HTTP protocol version
         lineStream >> p1 >> version;
         if (version != "HTTP/1.1") {
             throw HTTP_Exception(HTTP_Status::HTTP_VERSION_NOT_SUPPORTED, "Error: This server support only HTTP/1.1");
         }
 
+        // get path and extract query parameters
         istringstream urlStream(p1);
         urlStream.ignore(1);
         getline(urlStream, path, '?');
@@ -27,12 +31,15 @@ void HTTP_Request::insert(const char* recvBuffer) {
             queryParams[p1] = p2;
         }
 
+        // get request headers
         while (requestStream.peek() != '\n' && requestStream.peek() != '\r' && getline(requestStream, line)) {
             size_t colonPos = line.find(':');
             p1 = line.substr(0, colonPos);
             p2 = line.substr(colonPos + 2);
             headers[p1] = p2;
         }
+
+        // get request body
         getline(requestStream, body); // remove empty line
         getline(requestStream, body, '\0');
     }
